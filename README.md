@@ -29,7 +29,11 @@ This project is a Movie Recommendation System built using Flask and Machine Lear
 **🛠️ Tech Stack**
 
 Frontend: HTML, CSS, JavaScript
+
 Backend: Flask (Python)
+
 Database: SQLite
+
 API: TMDB (The Movie Database)
+
 Machine Learning: Scikit-learn / Pandas / NumPy
