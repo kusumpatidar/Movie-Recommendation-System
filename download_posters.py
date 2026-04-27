@@ -1,10 +1,3 @@
-# ── download_posters.py ───────────────────────────────────────────────────────
-# Run this ONCE on your PC:   python download_posters.py
-#
-# It will create  movies_with_posters.csv  in the same folder.
-# After that, your Flask app reads from that CSV — no TMDB calls at runtime.
-# ─────────────────────────────────────────────────────────────────────────────
-
 import os, time, requests, pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
