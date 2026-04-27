@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMatch — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+
+<div class="auth-split">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="auth-brand">🎬 CineMatch</div>
+    <h2 class="auth-tagline">Your personal<br><span class="accent">movie curator.</span></h2>
+    <p class="auth-desc">Powered by AI — discover films tailored to your taste.</p>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="auth-right">
+    <div class="auth-card">
+      <h3 class="auth-heading">Welcome back</h3>
+      <p class="auth-sub">Sign in to continue</p>
+
+      {% if error %}
+      <div class="form-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" class="auth-form">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="your username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required>
+
+        <button type="submit" class="btn-primary">Login →</button>
+      </form>
+
+      <p class="auth-switch">New here? <a href="/register">Create account</a></p>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

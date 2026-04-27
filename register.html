@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMatch — Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-page">
+
+<div class="auth-split">
+
+  <div class="auth-left">
+    <div class="auth-brand">🎬 CineMatch</div>
+    <h2 class="auth-tagline">Discover films<br><span class="accent">made for you.</span></h2>
+    <p class="auth-desc">Join thousands of movie lovers and get personalised picks.</p>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <h3 class="auth-heading">Create account</h3>
+      <p class="auth-sub">It's free and takes 10 seconds</p>
+
+      {% if error %}
+      <div class="form-error">{{ error }}</div>
+      {% endif %}
+
+      <form method="POST" class="auth-form">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="choose a username" required>
+
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@email.com" required>
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required>
+
+        <button type="submit" class="btn-primary">Create Account →</button>
+      </form>
+
+      <p class="auth-switch">Already have an account? <a href="/login">Login</a></p>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

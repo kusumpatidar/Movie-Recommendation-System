@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMatch — Find Your Next Movie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">🎬 CineMatch</div>
+  <div class="nav-right">
+    <span class="welcome-tag">{{ username }}</span>
+    <a href="/logout" class="btn-logout">Sign Out</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">What are you<br><span class="accent">watching tonight?</span></h1>
+    <p class="hero-sub">Type a few letters — we'll find your next obsession.</p>
+
+    <div class="search-wrapper">
+      <form method="POST" action="/recommend" id="searchForm" autocomplete="off">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="movieInput" name="movie"
+                 placeholder="e.g. Toy, Dark Knight, Aveng…" required>
+          <button type="submit" class="btn-search">Find Movies</button>
+        </div>
+      </form>
+      <div class="suggestions-dropdown" id="suggestionsBox"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ERROR -->
+{% if error %}
+<div class="alert-error">{{ error }}</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     RESULTS — ALL data (poster, overview, year) comes from Flask/CSV
+     No JavaScript API calls needed — instant render
+     ══════════════════════════════════════════════════════════════════ -->
+{% if movies %}
+<section class="results-section">
+  <h2 class="results-title">
+    Because you searched <span class="accent">"{{ searched }}"</span>
+  </h2>
+
+  <div class="cards-grid">
+    {% for i in range(movies|length) %}
+    <div class="movie-card" style="animation-delay: {{ i * 0.08 }}s"
+         onclick="openModal({{ i }})">
+
+      <!-- POSTER -->
+      <div class="card-poster">
+        {% if posters[i] %}
+          <img src="{{ posters[i] }}"
+               alt="{{ movies[i] }}"
+               loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="no-poster" style="display:none">🎬</div>
+        {% else %}
+          <div class="no-poster">🎬</div>
+        {% endif %}
+
+        <!-- Score badge -->
+        <div class="card-overlay">
+          <div class="score-badge">⭐ {{ hybrid_scores[i] }}</div>
+        </div>
+
+        <!-- Overview panel slides up on desktop hover -->
+        <div class="overview-panel">
+          <div class="overview-inner">
+            <p class="ov-year-rating">
+              {% if years[i] %}📅 {{ years[i] }}{% endif %}
+              {% if tmdb_ratings[i] %}&nbsp;&nbsp;🌐 {{ tmdb_ratings[i] }}/10{% endif %}
+            </p>
+            <p class="ov-text">
+              {{ overviews[i] if overviews[i] else "No overview available." }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Tap hint for mobile -->
+        <div class="tap-hint">👆 Tap for details</div>
+      </div>
+
+      <!-- CARD INFO -->
+      <div class="card-info">
+        <h3 class="card-title">{{ movies[i] }}</h3>
+        <p class="card-genres">{{ genres[i] }}</p>
+        <div class="score-bars">
+          <div class="score-row">
+            <span>Content</span>
+            <div class="bar-track">
+              <div class="bar-fill content-bar"
+                   style="width:{{ (content_scores[i] * 100)|int }}%"></div>
+            </div>
+            <span>{{ content_scores[i] }}</span>
+          </div>
+          <div class="score-row">
+            <span>User Taste</span>
+            <div class="bar-track">
+              <div class="bar-fill cf-bar"
+                   style="width:{{ (cf_scores[i] * 100)|int }}%"></div>
+            </div>
+            <span>{{ cf_scores[i] }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Data store for modal (embedded in page, no fetch needed) -->
+<script id="moviesData" type="application/json">
+[
+  {% for i in range(movies|length) %}
+  {
+    "title":       {{ movies[i]       | tojson }},
+    "poster":      {{ posters[i]      | tojson }},
+    "overview":    {{ overviews[i]    | tojson }},
+    "year":        {{ years[i]        | tojson }},
+    "tmdb_rating": {{ tmdb_ratings[i] | tojson }},
+    "genres":      {{ genres[i]       | tojson }},
+    "hybrid":      {{ hybrid_scores[i]| tojson }}
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     OVERVIEW MODAL
+     ══════════════════════════════════════════════════════════════════ -->
+<div class="ov-modal-backdrop" id="ovBackdrop" onclick="closeModal()">
+  <div class="ov-modal" onclick="event.stopPropagation()">
+    <button class="ov-modal-close" onclick="closeModal()">✕</button>
+    <div class="ov-modal-inner">
+      <img id="ovModalPoster" src="" alt=""
+           onerror="this.style.display='none'">
+      <div class="ov-modal-body">
+        <h3 id="ovModalTitle"></h3>
+        <p  id="ovModalMeta"   class="ov-modal-meta"></p>
+        <p  id="ovModalGenres" class="ov-modal-genres"></p>
+        <p  id="ovModalText"   class="ov-modal-text"></p>
+        <p  id="ovModalScore"  class="ov-modal-score"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Autocomplete ─────────────────────────────────────────────────────────── */
+const input    = document.getElementById('movieInput');
+const dropdown = document.getElementById('suggestionsBox');
+let   debounce = null;
+
+if (input) {
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    const q = input.value.trim();
+    if (q.length < 2) { closeDropdown(); return; }
+    debounce = setTimeout(async () => {
+      try {
+        const data = await (await fetch(`/suggestions?q=${encodeURIComponent(q)}`)).json();
+        renderSuggestions(data);
+      } catch(e) { console.error(e); }
+    }, 250);
+  });
+}
+
+function renderSuggestions(items) {
+  if (!items.length) { closeDropdown(); return; }
+  dropdown.innerHTML = items.map(it => `
+    <div class="suggestion-item" data-title="${it.title}">
+      <div class="sug-poster">
+        ${it.poster
+          ? `<img src="${it.poster}" alt="${it.title}"
+                  onerror="this.parentElement.innerHTML='<div class=sug-noposter>🎬</div>'">`
+          : `<div class="sug-noposter">🎬</div>`}
+      </div>
+      <div class="sug-info">
+        <span class="sug-title">${it.title}</span>
+        <span class="sug-genres">${it.genres}</span>
+      </div>
+    </div>`).join('');
+  dropdown.classList.add('open');
+  dropdown.querySelectorAll('.suggestion-item').forEach(el =>
+    el.addEventListener('mousedown', e => {
+      e.preventDefault();
+      input.value = el.dataset.title;
+      closeDropdown();
+      document.getElementById('searchForm').submit();
+    })
+  );
+}
+
+function closeDropdown() {
+  dropdown.innerHTML = '';
+  dropdown.classList.remove('open');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrapper')) closeDropdown();
+});
+
+/* ── Modal — data already in page, no fetch ───────────────────────────────── */
+const dataEl  = document.getElementById('moviesData');
+const movies  = dataEl ? JSON.parse(dataEl.textContent) : [];
+
+function openModal(i) {
+  const m = movies[i];
+  if (!m) return;
+
+  const poster = document.getElementById('ovModalPoster');
+  if (m.poster) {
+    poster.src           = m.poster;
+    poster.style.display = 'block';
+  } else {
+    poster.style.display = 'none';
+  }
+
+  document.getElementById('ovModalTitle').textContent =  m.title;
+  document.getElementById('ovModalMeta').textContent  =
+    [m.year && `📅 ${m.year}`, m.tmdb_rating && `🌐 ${m.tmdb_rating}/10`]
+    .filter(Boolean).join('   ');
+  document.getElementById('ovModalGenres').textContent = m.genres;
+  document.getElementById('ovModalText').textContent   =
+    m.overview || 'No overview available.';
+  document.getElementById('ovModalScore').textContent  =
+    m.hybrid ? `⭐ CineMatch Score: ${m.hybrid}` : '';
+
+  document.getElementById('ovBackdrop').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('ovBackdrop').classList.remove('open');
+}
+
+/* Close modal on Escape key */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+
+</body>
+</html>
